@@ -73,7 +73,6 @@ class SCNN(nn.Module):
         self.fc1 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0])
         self.aux3 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0])
         self.fc2 = nn.Linear(cfg_fc[0], cfg_fc[1])
-        self.aux4 = nn.Linear(cfg_fc[0], cfg_fc[1])
 
     def forward(self, input, time_window = 20):
         c1_mem = c1_spike = torch.zeros(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
