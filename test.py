@@ -9,23 +9,12 @@ data_path = './raw'
 test_set = torchvision.datasets.MNIST(root= data_path, train=False, download=True,  transform=transforms.ToTensor())
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=0)
 snn = SCNN()
-checkpoint = torch.load('./checkpoint/ckptspiking_model.t7')
+checkpoint = torch.load('./checkpoint/prune_ckptspiking_model.t7')
 snn.load_state_dict(checkpoint['net'])
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(snn.parameters(), lr=learning_rate)
 correct = 0
 total = 0
-
-#pruning
-parameters_to_prune = (
-    (snn.conv1, 'weight'),
-    (snn.conv2, 'weight'),
-    (snn.fc1, 'weight'),
-    (snn.fc2, 'weight'),
-)
-
-prune.global_unstructured(parameters_to_prune, pruning_method=prune.L1Unstructured, amount=0.3)
-#pruning completed
 start_time = time.time()
 with torch.no_grad():
     for batch_idx, (inputs, targets) in enumerate(test_loader):
