@@ -8,7 +8,7 @@ from spiking_model import*
 # os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 names = 'spiking_model'
 data_path =  './raw/' #todo: input your data path
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 train_dataset = torchvision.datasets.MNIST(root=data_path, train=True, download=True, transform=transforms.ToTensor())
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 
@@ -20,10 +20,11 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 acc_record = list([])
 loss_train_record = list([])
 loss_test_record = list([])
-checkpoint = torch.load('./checkpoint/4ckptspiking_model.t7')
+#checkpoint = torch.load('./checkpoint/3prune_ckptspiking_model.t7')
 snn = SCNN()
+#snn.load_state_dict(checkpoint['net'])
 snn.to(device)
-snn.load_state_dict(checkpoint['net'])
+
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(snn.parameters(), lr=learning_rate)
 global_step = 0
@@ -35,6 +36,7 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         images = images.float().to(device)
+
         outputs = snn(images)
         labels_ = torch.zeros(batch_size, 10).scatter_(1, labels.view(-1, 1), 1)
         loss = criterion(outputs.cpu(), labels_)

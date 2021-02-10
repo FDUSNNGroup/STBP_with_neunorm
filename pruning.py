@@ -7,6 +7,8 @@ names = 'spiking_model'
 snn = SCNN()
 checkpoint = torch.load('./checkpoint/4ckptspiking_model.t7')
 snn.load_state_dict(checkpoint['net'])
+snn.to("cpu")
+
 #pruning
 parameters_to_prune = (
     (snn.conv1, 'weight'),

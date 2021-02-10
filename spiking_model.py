@@ -4,14 +4,14 @@ import torch.nn.functional as F
 #from visdom import Visdom
 import numpy as np
 #viz = Visdom()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device( "cpu")
 thresh = 0.5 # neuronal threshold
 lens = 0.5 # hyper-parameters of approximate function
 decay = 0.25 # decay constants
 num_classes = 10
 batch_size  = 100
 learning_rate = 1e-3
-num_epochs = 1 # max epoch
+num_epochs = 5 # max epoch
 aux_decay = 0.25 # decay constant for auxiliary neurons
 
 # define approximate firing function
@@ -44,8 +44,8 @@ def original_mem_update(ops, x, mem, spike): #无辅助层情况下的膜电位�
     spike = act_fun(mem) # act_fun : approximation firing function
     return mem, spike
 # cnn_layer(in_planes, out_planes, stride, padding, kernel_size)
-cfg_cnn = [(1, 32, 1, 1, 3),
-           (32, 32, 1, 1, 3),]
+cfg_cnn = [(1, 8, 1, 1, 3),
+           (8, 8, 1, 1, 3),]
 # kernel size
 cfg_kernel = [28, 14, 7]
 # fc layer
@@ -64,15 +64,15 @@ class SCNN(nn.Module):
     def __init__(self):
         super(SCNN, self).__init__()
         in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[0]
-        self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding)
-        self.aux1 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding)
+        self.conv1 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        self.aux1 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[1]
-        self.conv2 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding)
-        self.aux2 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding)
+        self.conv2 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        self.aux2 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
 
-        self.fc1 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0])
-        self.aux3 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0])
-        self.fc2 = nn.Linear(cfg_fc[0], cfg_fc[1])
+        self.fc1 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0], bias=False)
+        self.aux3 = nn.Linear(cfg_kernel[-1] * cfg_kernel[-1] * cfg_cnn[-1][1], cfg_fc[0], bias=False)
+        self.fc2 = nn.Linear(cfg_fc[0], cfg_fc[1], bias=False)
  
     def forward(self, input, time_window = 20):
         c1_mem = c1_spike = torch.zeros(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
