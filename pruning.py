@@ -5,7 +5,7 @@ import torch.nn.utils.prune as prune
 from spiking_model import *
 names = 'spiking_model'
 snn = SCNN()
-checkpoint = torch.load('./checkpoint/ckptspiking_model.t7')
+checkpoint = torch.load('./checkpoint/4ckptspiking_model.t7')
 snn.load_state_dict(checkpoint['net'])
 #pruning
 parameters_to_prune = (
@@ -22,4 +22,4 @@ for layers in parameters_to_prune:
 state = {
     'net':snn.state_dict()
 }
-torch.save(state, './checkpoint/prune_ckpt' + names + '.t7')
+torch.save(state, './checkpoint/3prune_ckpt' + names + '.t7')
