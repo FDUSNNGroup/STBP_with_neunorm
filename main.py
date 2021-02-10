@@ -4,6 +4,7 @@ import torchvision.transforms as transforms
 import os
 import time
 from spiking_model import*
+#from visdom import Visdom
 # os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 names = 'spiking_model'
 data_path =  './raw/' #todo: input your data path
@@ -19,12 +20,13 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 acc_record = list([])
 loss_train_record = list([])
 loss_test_record = list([])
-
+checkpoint = torch.load('./checkpoint/4ckptspiking_model.t7')
 snn = SCNN()
 snn.to(device)
+snn.load_state_dict(checkpoint['net'])
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(snn.parameters(), lr=learning_rate)
-
+global_step = 0
 for epoch in range(num_epochs):
     running_loss = 0
     start_time = time.time()
@@ -39,6 +41,7 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
         loss.backward()
         optimizer.step()
+        global_step += 1
         if (i+1)%100 == 0:
              print ('Epoch [%d/%d], Step [%d/%d], Loss: %.5f'
                     %(epoch+1, num_epochs, i+1, len(train_dataset)//batch_size,running_loss ))
@@ -61,7 +64,7 @@ for epoch in range(num_epochs):
             if batch_idx %100 ==0:
                 acc = 100. * float(correct) / float(total)
                 print(batch_idx, len(test_loader),' Acc: %.5f' % acc)
-
+    
     print('Iters:', epoch,'\n\n\n')
     print('Test Accuracy of the model on the 10000 test images: %.3f' % (100 * correct / total))
     acc = 100. * float(correct) / float(total)
@@ -77,5 +80,5 @@ for epoch in range(num_epochs):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt' + names + '.t7')
+        torch.save(state, './checkpoint/4ckpt' + names + '.t7')
         best_acc = acc
