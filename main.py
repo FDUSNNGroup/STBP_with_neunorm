@@ -20,9 +20,9 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 acc_record = list([])
 loss_train_record = list([])
 loss_test_record = list([])
-#checkpoint = torch.load('./checkpoint/3prune_ckptspiking_model.t7')
+checkpoint = torch.load('./checkpoint/3prune_ckptspiking_model.t7')
 snn = SCNN()
-#snn.load_state_dict(checkpoint['net'])
+snn.load_state_dict(checkpoint['net'])
 snn.to(device)
 
 criterion = nn.MSELoss()

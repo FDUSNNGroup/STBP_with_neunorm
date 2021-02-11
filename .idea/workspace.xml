@@ -135,9 +135,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.spiking_model" />
         <item itemvalue="Python.pruning" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.spiking_model" />
         <item itemvalue="Python.parameter" />
       </list>
     </recent_temporary>
@@ -151,7 +151,7 @@
       <option name="presentableId" value="Default" />
       <updated>1612943013464</updated>
       <workItem from="1612943014819" duration="5757000" />
-      <workItem from="1612958326321" duration="9820000" />
+      <workItem from="1612958326321" duration="12315000" />
     </task>
     <servers />
   </component>
@@ -160,9 +160,9 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/STBP_with_neunorm$spiking_model.coverage" NAME="spiking_model Coverage Results" MODIFIED="1612967984649" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/STBP_with_neunorm$main.coverage" NAME="main Coverage Results" MODIFIED="1612967955975" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/STBP_with_neunorm$test.coverage" NAME="test Coverage Results" MODIFIED="1612968043009" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/STBP_with_neunorm$pruning.coverage" NAME="pruning Coverage Results" MODIFIED="1612967976570" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/STBP_with_neunorm$main.coverage" NAME="main Coverage Results" MODIFIED="1613012364769" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/STBP_with_neunorm$test.coverage" NAME="test Coverage Results" MODIFIED="1613014254187" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/STBP_with_neunorm$pruning.coverage" NAME="pruning Coverage Results" MODIFIED="1613014248281" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/STBP_with_neunorm$parameter.coverage" NAME="parameter Coverage Results" MODIFIED="1612964844342" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
