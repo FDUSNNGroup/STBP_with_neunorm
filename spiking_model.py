@@ -7,10 +7,10 @@ import numpy as np
 device = torch.device( "cpu")
 thresh = 0.5 # neuronal threshold
 lens = 0.5 # hyper-parameters of approximate function
-decay = 0.6 # decay constants
+decay = 0.75 # decay constants
 num_classes = 10
 batch_size  = 16
-learning_rate = 1e-4
+learning_rate = 1e-3
 num_epochs = 20 # max epoch
 #aux_decay = 0.25 # decay constant for auxiliary neurons
 
@@ -46,9 +46,10 @@ def original_mem_update(ops, x, mem, spike): #无辅助层情况下的膜电位�
 cfg_cnn = [(3, 32, 1, 1, 3),
            (32, 64, 1, 1, 3),
            (64, 32, 1, 1, 3),
+           (32, 32, 1, 1, 3),
            (32, 1, 1, 0, 1)]
 # kernel size
-cfg_kernel = [32, 16, 8, 8]
+cfg_kernel = [32, 16, 8]
 # fc layer
 cfg_fc = [10]
 
@@ -76,20 +77,24 @@ class SCNN(nn.Module):
         in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[3]
         self.conv4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         self.aux4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[4]
+        self.conv5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        self.aux5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         self.fc = nn.Linear(cfg_cnn[-1][1]*cfg_kernel[-1]*cfg_kernel[-1], cfg_fc[0], bias=False)
  
     def forward(self, input, time_window = 20):
-        c1_mem = 0.5*torch.ones(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
-        c1_spike = torch.zeros(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
-        c2_mem = 0.5*torch.ones(batch_size, cfg_cnn[1][1], cfg_kernel[1], cfg_kernel[1], device=device)
-        c2_spike = torch.zeros(batch_size, cfg_cnn[1][1], cfg_kernel[1], cfg_kernel[1], device=device)
+        
+        c1_mem = c1_spike = torch.zeros(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
+        #c2_mem = 0.5*torch.ones(batch_size, cfg_cnn[1][1], cfg_kernel[1], cfg_kernel[1], device=device)
+        c2_mem = c2_spike = torch.zeros(batch_size, cfg_cnn[1][1], cfg_kernel[0], cfg_kernel[0], device=device)
         #c3_mem = c3_spike = torch.zeros(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c3_spike = torch.zeros(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c3_mem = 0.5*torch.ones(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c4_spike = torch.zeros(batch_size, cfg_cnn[3][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c4_mem = 0.5*torch.ones(batch_size, cfg_cnn[3][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        h_spike = h_sumspike = torch.zeros(batch_size, cfg_fc[0], device=device)
-        h_mem = 0.5*torch.ones(batch_size, cfg_fc[0], device=device)
+        c3_mem = c3_spike = torch.zeros(batch_size, cfg_cnn[2][1], cfg_kernel[1], cfg_kernel[1], device=device)
+        #c3_mem = 0.5*torch.ones(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
+        c4_mem = c4_spike = torch.zeros(batch_size, cfg_cnn[3][1], cfg_kernel[1], cfg_kernel[1], device=device)
+        #c4_mem = 0.5*torch.ones(batch_size, cfg_cnn[3][1], cfg_kernel[2], cfg_kernel[2], device=device)
+        c5_mem = c5_spike = torch.zeros(batch_size, cfg_cnn[4][1], cfg_kernel[2], cfg_kernel[2], device=device)
+        h_mem = h_spike = h_sumspike = torch.zeros(batch_size, cfg_fc[0], device=device)
+        #h_mem = 0.5*torch.ones(batch_size, cfg_fc[0], device=device)
         '''
         fid1 = open(file='D:/vscode/SNN_with_pruning/conv1_mem.txt',mode='w')
         fid2 = open(file='D:/vscode/SNN_with_pruning/conv1_spike.txt',mode='w')
@@ -109,7 +114,8 @@ class SCNN(nn.Module):
             print(c1_mem.detach().numpy(),file=fid1)
             print(c1_spike.detach().numpy(),file=fid2)
             '''
-            x = F.max_pool2d(c1_spike, 2)
+            x = c1_spike
+            #x = F.max_pool2d(c1_spike, 2)
             
             c2_mem, c2_spike = mem_update(self.conv2, self.aux2, x, c2_mem,c2_spike)
             '''
@@ -121,7 +127,9 @@ class SCNN(nn.Module):
             
             c3_mem, c3_spike = mem_update(self.conv3, self.aux3, x, c3_mem, c3_spike)
             c4_mem, c4_spike = mem_update(self.conv4, self.aux4, c3_spike, c4_mem, c4_spike)
-            x = c4_spike
+            x = F.max_pool2d(c4_spike,2)
+            c5_mem, c5_spike = mem_update(self.conv5, self.aux5, x, c5_mem, c5_spike)
+            x = c5_spike
             x = x.view(batch_size, -1)
 
            
