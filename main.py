@@ -23,6 +23,8 @@ loss_test_record = list([])
 checkpoint = torch.load('./checkpoint/4ckptspiking_model.t7')
 snn = SCNN()
 snn.load_state_dict(checkpoint['net'])
+
+
 snn.to(device)
 #define loss function and optimizer
 #snn.apply(para_init)

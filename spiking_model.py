@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 import math
 #viz = Visdom()
-device = torch.device( "cpu")
+device = torch.device( "cuda")
 thresh = 0.5 # neuronal threshold
 lens = 0.5 # hyper-parameters of approximate function
 decay = 0.25 # decay constants
