@@ -3,13 +3,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 #from visdom import Visdom
 import numpy as np
+import math
 #viz = Visdom()
 device = torch.device( "cpu")
 thresh = 0.5 # neuronal threshold
 lens = 0.5 # hyper-parameters of approximate function
-decay = 0.75 # decay constants
+decay = 0.25 # decay constants
 num_classes = 10
-batch_size  = 16
+batch_size  = 8
 learning_rate = 1e-3
 num_epochs = 20 # max epoch
 #aux_decay = 0.25 # decay constant for auxiliary neurons
@@ -28,12 +29,18 @@ class ActFun(torch.autograd.Function):
         temp = abs(input - thresh) < lens
         return grad_input * temp.float()
 
+def data_normalize(input_tensor):
+        data_min = input_tensor.min().float()
+        data_max = input_tensor.max().float()
+        output_tensor = (input_tensor - data_min)/(data_max - data_min)
+        return output_tensor
 act_fun = ActFun.apply
 # membrane potential update
 
 def mem_update(ops, aux_ops, x, mem, spike):
-    tmp = ops(x) - 0.1*aux_ops(x)
-    tmp = torch.relu(tmp)
+    tmp = ops(x) - 0.5*aux_ops(x)
+    #tmp = data_normalize(tmp)
+    #tmp = torch.relu(tmp)
     mem = mem * decay * (1. - spike) + tmp
     spike = act_fun(mem) # act_fun : approximation firing function
     return mem, spike
@@ -43,15 +50,16 @@ def original_mem_update(ops, x, mem, spike): #无辅助层情况下的膜电位�
     spike = act_fun(mem) # act_fun : approximation firing function
     return mem, spike
 # cnn_layer(in_planes, out_planes, stride, padding, kernel_size)
-cfg_cnn = [(3, 32, 1, 1, 3),
-           (32, 64, 1, 1, 3),
-           (64, 32, 1, 1, 3),
+cfg_cnn = [(3, 16, 1, 1, 3),
+           (16, 32, 1, 1, 3),
            (32, 32, 1, 1, 3),
-           (32, 1, 1, 0, 1)]
+        #    (512, 16, 1, 1, 3),
+        #    (16, 16, 1, 1, 3),
+           ]
 # kernel size
 cfg_kernel = [32, 16, 8]
 # fc layer
-cfg_fc = [10]
+cfg_fc = [512,10]
 
 # Dacay learning_rate
 
@@ -74,26 +82,34 @@ class SCNN(nn.Module):
         in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[2]
         self.conv3 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
         self.aux3 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-        in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[3]
-        self.conv4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-        self.aux4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-        in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[4]
-        self.conv5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-        self.aux5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
-        self.fc = nn.Linear(cfg_cnn[-1][1]*cfg_kernel[-1]*cfg_kernel[-1], cfg_fc[0], bias=False)
- 
-    def forward(self, input, time_window = 20):
+        # in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[3]
+        # self.conv4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        # self.aux4 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        # in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[4]
+        # self.conv5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        # self.aux5 = nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=padding, bias=False)
+        #in_planes, out_planes, stride, padding, kernel_size = cfg_cnn[5]
+        #self.batchnorm = nn.BatchNorm2d(cfg_cnn[-1][1]*cfg_kernel[-1]*cfg_kernel[-1])
+        self.flatten = nn.Linear(cfg_cnn[-1][1]*cfg_kernel[-1]*cfg_kernel[-1], cfg_fc[0], bias=False)
+        self.aux_flatten = nn.Linear(cfg_cnn[-1][1]*cfg_kernel[-1]*cfg_kernel[-1], cfg_fc[0], bias=False)
+        
+        self.fc = nn.Linear(cfg_fc[0], cfg_fc[1], bias=False)
+        # for n in self.modules():
+        #     if isinstance(n, nn.Conv2d):
+        #         m = n.kernel_size[0]*n.kernel_size[1]*n.in_channels
+        #         m = math.sqrt(3/m)
+        #         n.weight.data.normal_(0, m)
+    def forward(self, input, time_window = 12):
         
         c1_mem = c1_spike = torch.zeros(batch_size, cfg_cnn[0][1], cfg_kernel[0], cfg_kernel[0], device=device)
         #c2_mem = 0.5*torch.ones(batch_size, cfg_cnn[1][1], cfg_kernel[1], cfg_kernel[1], device=device)
-        c2_mem = c2_spike = torch.zeros(batch_size, cfg_cnn[1][1], cfg_kernel[0], cfg_kernel[0], device=device)
+        c2_mem = c2_spike = torch.zeros(batch_size, cfg_cnn[1][1], cfg_kernel[1], cfg_kernel[1], device=device)
         #c3_mem = c3_spike = torch.zeros(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
         c3_mem = c3_spike = torch.zeros(batch_size, cfg_cnn[2][1], cfg_kernel[1], cfg_kernel[1], device=device)
         #c3_mem = 0.5*torch.ones(batch_size, cfg_cnn[2][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c4_mem = c4_spike = torch.zeros(batch_size, cfg_cnn[3][1], cfg_kernel[1], cfg_kernel[1], device=device)
-        #c4_mem = 0.5*torch.ones(batch_size, cfg_cnn[3][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        c5_mem = c5_spike = torch.zeros(batch_size, cfg_cnn[4][1], cfg_kernel[2], cfg_kernel[2], device=device)
-        h_mem = h_spike = h_sumspike = torch.zeros(batch_size, cfg_fc[0], device=device)
+        
+        h0_mem = h1_spike = torch.zeros(batch_size, cfg_fc[0], device=device)
+        h_mem = h_spike = h_sumspike = torch.zeros(batch_size, cfg_fc[1], device=device)
         #h_mem = 0.5*torch.ones(batch_size, cfg_fc[0], device=device)
         '''
         fid1 = open(file='D:/vscode/SNN_with_pruning/conv1_mem.txt',mode='w')
@@ -114,8 +130,8 @@ class SCNN(nn.Module):
             print(c1_mem.detach().numpy(),file=fid1)
             print(c1_spike.detach().numpy(),file=fid2)
             '''
-            x = c1_spike
-            #x = F.max_pool2d(c1_spike, 2)
+            #x = c1_spike
+            x = F.max_pool2d(c1_spike, 2)
             
             c2_mem, c2_spike = mem_update(self.conv2, self.aux2, x, c2_mem,c2_spike)
             '''
@@ -123,16 +139,15 @@ class SCNN(nn.Module):
             print(c2_spike.detach().numpy(),file=fid4)
             '''
             
-            x = F.max_pool2d(c2_spike, 2)
+            #x = F.max_pool2d(c2_spike, 2)
             
-            c3_mem, c3_spike = mem_update(self.conv3, self.aux3, x, c3_mem, c3_spike)
-            c4_mem, c4_spike = mem_update(self.conv4, self.aux4, c3_spike, c4_mem, c4_spike)
-            x = F.max_pool2d(c4_spike,2)
-            c5_mem, c5_spike = mem_update(self.conv5, self.aux5, x, c5_mem, c5_spike)
-            x = c5_spike
+            c3_mem, c3_spike = mem_update(self.conv3, self.aux3, c2_spike, c3_mem, c3_spike)
+            x = F.max_pool2d(c3_spike, 2)
             x = x.view(batch_size, -1)
-
-           
+            #x = x.view(batch_size, -1)
+#            x = self.batchnorm(x)
+            h0_mem, h0_spike = mem_update(self.flatten, self.aux_flatten, x, h0_mem, h1_spike)
+            x = h0_spike       
             
             h_mem, h_spike = original_mem_update(self.fc, x, h_mem,h_spike)
             h_sumspike += h_spike

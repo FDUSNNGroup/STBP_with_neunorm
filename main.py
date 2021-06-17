@@ -25,8 +25,17 @@ snn = SCNN()
 snn.load_state_dict(checkpoint['net'])
 snn.to(device)
 #define loss function and optimizer
+#snn.apply(para_init)
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(snn.parameters(), lr=learning_rate)
+conv1_params = list(map(id, snn.conv1.parameters()))
+conv2_params = list(map(id, snn.conv2.parameters()))
+conv3_params = list(map(id, snn.conv3.parameters()))
+linear_params = filter(lambda p: id(p) not in conv1_params + conv2_params + conv3_params, snn.parameters())
+params = [{'params':linear_params},
+        {'params':snn.conv1.parameters(), 'lr':learning_rate},
+        {'params':snn.conv2.parameters(), 'lr':learning_rate/10},
+        {'params':snn.conv3.parameters(), 'lr':learning_rate/100}]
+optimizer = torch.optim.Adam(params, lr=learning_rate)
 global_step = 0
 #train network
 for epoch in range(num_epochs):
@@ -40,7 +49,7 @@ for epoch in range(num_epochs):
         labels_ = torch.zeros(batch_size, 10).scatter_(1, labels.view(-1, 1), 1)
         # print(labels)
         # print(labels_)
-        # print("########\n",outputs)
+        # print("########\n",outputs-labels_)
         loss = criterion(outputs.cpu(), labels_)
         running_loss += loss.item()
         loss.backward()
